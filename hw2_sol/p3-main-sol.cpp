@@ -217,53 +217,28 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 			FILL ME IN: set joint torques
 		-------------------------------------------------------------------------------------*/
 
-		// - update end effector position, orientation
+		// ---------------------------------------------------------------------------------
+		// (1) Update current robot configuration parameters and desired trajectory values 
+		//----------------------------------------------------------------------------------
+
+		// Update joint space gravity
+		robot->gravityVector(g);
+
+		// Update current end effector position, orientation
 		robot->position(ee_pos, ee_link_name, Eigen::Vector3d::Zero());
 		robot->rotation(ee_rot_mat, ee_link_name);
 
-		// - Convert rotation matrix to quaternion
-		// 			Note: They way eigen does this leads to some sign issues (see pg.17 of the course reader)
-		//			So, we have to check if the biggest element in the quaternion has changed sign to make 
-		//			sure the conversion from rotation matrix to quaternion is correct
-
-		Eigen::Quaterniond temp_ee_rot_lambda = Eigen::Quaterniond(ee_rot_mat); // new rotation quaternion
-		Eigen::VectorXd::Index max_ind = 0;
-		Eigen::VectorXd temp_vec = temp_ee_rot_lambda.coeffs().cwiseAbs(); // get absolute values
-		temp_vec.cwiseMax(max_ind); // guaranteed to be > 0.5
-
-		// ---- sign check ----//
-
-		if ((temp_ee_rot_lambda.coeffs())[max_ind]*(ee_rot_lambda.coeffs())[max_ind] < 0) // need to flip sign
-		{	
-			// ee_rot_lambda = -temp_ee_rot_lambda; <-- Eigen does not allow this unfortunately
-			ee_rot_lambda = Eigen::Quaterniond(
-				-temp_ee_rot_lambda.w(),
-				-temp_ee_rot_lambda.x(),
-				-temp_ee_rot_lambda.y(),
-				-temp_ee_rot_lambda.z() );
-		} 
-		else 
-		{
-			// no need to flip sign
-			ee_rot_lambda = temp_ee_rot_lambda;
-		}
-
-		// ---- end sign check ----//
-
-		// - update joint space gravity
-		robot->gravityVector(g);
-
-		// - update operational space dynamics
-		Eigen::MatrixXd J0_swapped(6, robot->dof());
-		robot->J(J0_swapped, ee_link_name, Eigen::Vector3d::Zero());
-		J0.topRows(3) = J0_swapped.bottomRows(3);
-		J0.bottomRows(3) = J0_swapped.topRows(3);
+		// Update operational space dynamics
+		robot->J_0(J0, ee_link_name, Eigen::Vector3d::Zero());
 		L0 = (J0 * robot->_M_inv * J0.transpose()).inverse();
 		Jbar = robot->_M_inv * J0.transpose() * L0;
 		Nbar = In - Jbar*J0;
 		p = Jbar.transpose()*g;
 
-		// - update end-effector desired position, velocity and acceleration
+		// Update current end effector velocity (v,w)
+		v0 = J0*robot->_dq; 
+
+		// Update desired end-effector position, velocity and acceleration
 		double R = 0.1; //m
 		double T = 5.0; //sec
 		double xd = 0.0;
@@ -299,33 +274,67 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 			1/sqrt(2)*(-cos(M_PI/4.0*cos(2.0*M_PI*curr_time/T)) * pow(-pow(M_PI, 2)/(2.0*T)*sin(2.0*M_PI*curr_time/T), 2) + sin(M_PI/4.0*cos(2.0*M_PI*curr_time/T)) * pow(M_PI, 3)/(T*T)*cos(2.0*M_PI*curr_time/T))
 		);
 
-		// - compute current position and orientation error 
-		//			Note: for the orientation  --> delta_phi = -Er+*labmdad)
+		// --------------------------------------------------------------------
+		// (2) Compute desired operational space trajectory values and errors 
+		//---------------------------------------------------------------------
+
+		// - Convert end effector rotation matrix to quaternion for computing 
+		//   the end effector orientation error and desired op space v, dv 
+
+		// 			*** Note *** They way eigen does this conversion leads to some sign issues (see pg.17 of the course reader)
+		//			So, we have to check if the biggest element in the quaternion has changed sign to make 
+		//			sure the conversion from rotation matrix to quaternion is correct
+
+		Eigen::Quaterniond temp_ee_rot_lambda = Eigen::Quaterniond(ee_rot_mat); // new rotation quaternion
+		Eigen::VectorXd::Index max_ind = 0;
+		Eigen::VectorXd temp_vec = temp_ee_rot_lambda.coeffs().cwiseAbs(); // get absolute values
+		temp_vec.cwiseMax(max_ind); // guaranteed to be > 0.5
+
+		// ---------------------------------- sign check ---------------------------------//
+		if ((temp_ee_rot_lambda.coeffs())[max_ind]*(ee_rot_lambda.coeffs())[max_ind] < 0) // Flip sign
+		{	
+			// ee_rot_lambda = -temp_ee_rot_lambda; <-- Eigen does not allow this unfortunately
+			ee_rot_lambda = Eigen::Quaterniond(
+				-temp_ee_rot_lambda.w(),
+				-temp_ee_rot_lambda.x(),
+				-temp_ee_rot_lambda.y(),
+				-temp_ee_rot_lambda.z() );
+		} 
+		else // do NOT flip sign (eigen did it right)
+		{
+			ee_rot_lambda = temp_ee_rot_lambda;
+		}
+		// ---------------------------------- sign check end ---------------------------------//
+
+		// - Compute desired operational space velocity and acceleration 
+		v0d << dxd, dyd, dzd, 2*(dlambdad * ee_rot_lambda.conjugate()).vec();
+		dv0d << ddxd, ddyd, ddzd, 2*(ddlambdad * ee_rot_lambda.conjugate()).vec();
+
+		// - Compute current position and orientation error 
+		//			*** Note *** For the orientation  --> delta_phi = -Er+*labmdad)
 		//			remember from hw1: Er+*labmdad = 2 * labmdad * lambda.conjugate()
-		ee_error << (ee_pos - Eigen::Vector3d(xd, yd, zd)), -2*(lambdad*ee_rot_lambda.conjugate()).vec();
+		ee_error << (ee_pos - Eigen::Vector3d(xd, yd, zd)), -2*(lambdad * ee_rot_lambda.conjugate()).vec();
 
-		// - compute desired (linear and angular) velocity and acceleration 
-		v0d << dxd, dyd, dzd, 2*(dlambdad*ee_rot_lambda.conjugate()).vec();
-		dv0d << ddxd, ddyd, ddzd, 2*(ddlambdad*ee_rot_lambda.conjugate()).vec();
 
-		// - update current operational space velocity (v and w)
-		v0 = J0*robot->_dq;
+		// ---------------------------------------------------------------------------------
+		// (3) Compute joint torques
+		//----------------------------------------------------------------------------------
 
-		// - set selection matrices
+		// Selection matrices
 		select_motion = Eigen::MatrixXd::Identity(6,6);
 		select_motion(0,0) = 0; // no motion control in global x position
 		select_motion(4,4) = 0; // no rotation control about global y axis
 		select_motion(5,5) = 0; // no rotation control about global z axis
 		select_forces = Eigen::MatrixXd::Identity(6,6) - select_motion;
 
-		// set desired forces
+		// Desired forces/moments
 		Fd << 10, 0, 0, 0, 0, 0;
 
-		// - Control torques
+		// Control torques
 		tau = J0.transpose()*(
-				L0*select_motion*(dv0d - kpx*ee_error - kvx*(v0 - v0d)) + // F_motion for trajectory tracking
+				L0*select_motion*(dv0d - kpx*ee_error - kvx*(v0 - v0d)) + // op. space F_motion for trajectory tracking
 				select_forces*Fd + // Fdes feedfoward term 
-				L0*select_forces*(- kvx*(v0)) + // Op space damping motion in force control direction and moments in y,z
+				L0*select_forces*(- kvx*(v0)) + // Op space damping: damps lin. vel. in x and angular vel. about y and z
 				p ) + // gravity compensation in op. space
 				Nbar.transpose()*robot->_M*(-kvj*robot->_dq + g); // joint space damping and gravity comp. in the null space
 

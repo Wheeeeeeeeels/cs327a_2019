@@ -179,7 +179,7 @@ void simulation(Sai2Model::Sai2Model* robot) {  //--- Simulation loop ---//
 		// ----------------------------------------------------
 		// Calculate omega. 
 		// 		Option 1 --> using the quaternion form of the E matrix: omega = 2 * dlambda * lambda.conjugate()
-		// 		Option 2 --> w = Er_inv * dlambda
+		// 		Option 2 --> omega = Er_inv * dlambda
 		
 		Eigen::Vector3d omega = 2*(dlambda*lambda.conjugate()).vec(); 
 		opspace_vel << dx, dy, dz, omega.x(), omega.y(), omega.z();

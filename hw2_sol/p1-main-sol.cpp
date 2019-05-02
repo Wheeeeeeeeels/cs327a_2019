@@ -168,7 +168,9 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	double kpj = 50.0; // joint space kp
 	double kvj = 20.0; // joint space kv
 
-	// additional cache variables
+	// ---------------------------------------------------------------------------------
+	// Suggested cache variables
+	//----------------------------------------------------------------------------------
 	Eigen::VectorXd g(robot->dof()); //joint space gravity vector
 	Eigen::MatrixXd Jv(3, robot->dof()); //end effector linear velocity Jacobian
 	Eigen::MatrixXd Lv(3, 3); //Lambda_v at end effector
@@ -213,8 +215,8 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 			// (1) Pure null space damping  
 			//----------------------------------------------------
 			case PART1:
-				tau = Jv.transpose()*(Lv*(-kpx*(ee_pos - ee_des_pos) -kvx*(v)) + p) + // trajectory tracking 
-					  robot->_M*(-kvj*robot->_dq); // joint damping
+				tau = Jv.transpose()*(Lv*(-kpx*(ee_pos - ee_des_pos) -kvx*(v)) + p) + // op. space trajectory tracking 
+					  robot->_M*(-kvj*robot->_dq); // joint space joint damping
 				break;
 
 			// (2) Pseudo-inverse decoupling (p.88-89 course reader)
@@ -227,8 +229,9 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 				Jpseudo = Jv.transpose()*(Jv*Jv.transpose()).inverse();
 				Npseudo = (In - Jpseudo*Jv);
 				// control torques 
-				tau = Jv.transpose()*(Lv*(-kpx*(ee_pos - ee_des_pos) -kvx*(v)) + p) +
-					  Npseudo.transpose()*(robot->_M*(-kpj*(robot->_q - qd) -kvj*robot->_dq) + g);
+				tau = Jv.transpose()*(Lv*(-kpx*(ee_pos - ee_des_pos) -kvx*(v)) + p) +  // op. space trajectory tracking 
+					  Npseudo.transpose()*(robot->_M*(-kpj*(robot->_q - qd) -kvj*robot->_dq) + g); // null space joint trajectory 
+					  																			   // tracking and joint damping
 				break;
 
 			// (3) Null space dynamically consistent decoupling (p.88-89 course reader)
@@ -237,7 +240,7 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 				// null space motion
 				qd = robot->_q;
 				qd[1] = -M_PI/8.0 + M_PI/8.0*sin(2.0*M_PI*curr_time/10.0);
-				// pseudo inverse and associated null space
+				// control torques using dynamically consistent inverse 
 				tau = Jv.transpose()*(Lv*(-kpx*(ee_pos - ee_des_pos) -kvx*(v)) + p) + 
 					  Nbar.transpose()*(robot->_M*(-kpj*(robot->_q - qd) -kvj*robot->_dq) + g);
 				break;
@@ -280,10 +283,6 @@ void simulation(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 		double curr_time = timer.elapsedTime();
 		double loop_dt = curr_time - last_time; 
 		sim->integrate(loop_dt);
-
-		// if (!fTimerDidSleep) {
-		// 	cout << "Warning: timer underflow! dt: " << loop_dt << "\n";
-		// }
 
 		// update last time
 		last_time = curr_time;
