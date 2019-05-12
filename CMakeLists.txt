@@ -12,6 +12,7 @@ set (CS327A_COMMON_SOURCE
 	${PROJECT_SOURCE_DIR}/src/force_sensor/ForceSensorSim.h
 	${PROJECT_SOURCE_DIR}/src/force_sensor/ForceSensorDisplay.h)
 include_directories(${PROJECT_SOURCE_DIR}/src)
+# include_directories(/usr/local/include) #uncomment if having problems with glfw library in mac
 
 # --------------------------------------------
 # set common dependencies
@@ -39,7 +40,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES Linux)
 endif () #NOTE: Windows is currently unsupported
 link_directories(${CHAI3D_LIBRARY_DIRS})
 
-# - SAI2-SIMULATION. TODO: this should not be needed. something fishy.
+# - SAI2-SIMULATION. 
 find_package(SAI2-SIMULATION REQUIRED)
 include_directories(${SAI2-SIMULATION_INCLUDE_DIRS})
 add_definitions(${SAI2-SIMULATION_DEFINITIONS})

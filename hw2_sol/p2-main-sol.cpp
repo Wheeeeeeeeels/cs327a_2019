@@ -31,9 +31,6 @@ const string world_fname = "resources/hw2/world_2_iiwa.urdf";
 const string robot_fname = "../resources/kuka_iiwa/kuka_iiwa.urdf";
 const string robot_name = "Kuka-IIWA";
 const string ee_link_name = "link6";
-
-// const string camera_name = "camera_front";
-// const string camera_name = "camera_back_top";
 const string camera_name = "camera_top";
 
 /* --------------------------------------------------------------------------------------
