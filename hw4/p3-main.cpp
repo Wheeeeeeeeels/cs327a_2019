@@ -235,7 +235,9 @@ void control(Sai2Model::Sai2Model* robot1, Sai2Model::Sai2Model* robot2, Sai2Mod
 	// double kv = 10;
 
 	// control mode
-	ControlMode control_mode = CONTROL_GRASP_STABILIZE; // 0 = grasp stabilizing controller, 1 = augmented object controller
+	// 		0 = grasp stabilizing controller
+	//		1 = augmented object controller
+	ControlMode control_mode = CONTROL_GRASP_STABILIZE; 
 
 	while (fSimulationRunning) { //automatically set to false when simulation is quit
 		fTimerDidSleep = timer.waitForNextLoop();
@@ -293,12 +295,17 @@ void control(Sai2Model::Sai2Model* robot1, Sai2Model::Sai2Model* robot2, Sai2Mod
 
 
 		} else if (control_mode == CONTROL_GRASP_STABILIZE) { // initial grasp stabilization
+			
 			Eigen::MatrixXd robot1_j0_ee(6, robot1->dof());
 			Eigen::MatrixXd robot2_j0_ee(6, robot2->dof());
 			robot1->J_0(robot1_j0_ee, ee_link_name, Eigen::Vector3d::Zero());
 			robot2->J_0(robot2_j0_ee, ee_link_name, Eigen::Vector3d::Zero());
+
+			// Joint Torques
 			tau1 = robot1_j0_ee.transpose()*(object_p/2) + robot1->_M*(-10.0*robot1->_dq) + robot1_g;
 			tau2 = robot2_j0_ee.transpose()*(object_p/2) + robot2->_M*(-10.0*robot2->_dq) + robot2_g;
+			
+			// Grasp stabilization
 			static uint grasp1Counter = 0;
 			static uint grasp2Counter = 0;
 			if (robot1->_dq[6] < 0.1) {
@@ -312,7 +319,7 @@ void control(Sai2Model::Sai2Model* robot1, Sai2Model::Sai2Model* robot2, Sai2Mod
 				grasp2Counter = 0;
 			}
 			if (grasp1Counter > 40 && grasp2Counter > 40) {
-				cout << "----- Switch Control Mode to Augmented Object Model -----" << endl;
+				cout << " ** Switch Control Mode to Augmented Object Model ** " << endl;
 				control_mode = CONTROL_AUGMENTED_OBJECT;
 			}
 		}

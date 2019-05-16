@@ -205,15 +205,24 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	Eigen::Vector3d ee_pos_local;
 	ee_pos_local << -0.2, 0.0, 0.0;
 
-	// distance computations
-	string closest_link_name;
+	// ** Distance computation variables ** 
+	// center of sphere in robot base frame
 	Eigen::Vector3d sphere_center;
+	// position of the closest point on the robot to the sphere, 
+	// in robot base frame
 	Eigen::Vector3d closest_point;
+	// distance from closest point to the surface of the sphere
 	double closest_distance;
-	Eigen::Affine3d T_closest_link;
-	Eigen::MatrixXd Jconst_full_6(6, robot->dof());
+	// name of the link on which the closest point is located
+	string closest_link_name;
+	// linear velocity Jacobian and full jacobian at the point closest to the 
+	// surface of the sphere
 	Eigen::MatrixXd Jv_closest_point(3, robot->dof());
+	Eigen::MatrixXd Jconst_full_6(6, robot->dof());
+	// desired end effector positions
 	Eigen::Vector3d ee_pos_des;
+	// transform from base to closest link 
+	Eigen::Affine3d T_closest_link;
 
 	// ** Other suggested variables **
 	// bool constraint_active = false;
