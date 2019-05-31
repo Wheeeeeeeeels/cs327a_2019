@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw2 - p1-main.cpp
+ * hw2-p2-main.cpp
  *
  * Implement operational space motion tracking for a 7-DOF redundant kuka 
  * by completing the "FILL ME IN" section 

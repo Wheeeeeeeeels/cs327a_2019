@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw1-sol - main.cpp
+ * hw1-main-sol.cpp
  *
  * Implement an algorithm to have a 7-DOF kuka track a desired trajectory
  * by completing the "FILL ME IN" section 
@@ -223,7 +223,7 @@ GLFWwindow* glfwInitialize() { //--- Window initialization ---//
 
     // create window and make it current
     glfwWindowHint(GLFW_VISIBLE, 0);
-    GLFWwindow* window = glfwCreateWindow(windowW, windowH, "SAI2.0 - CS327a HW1", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowW, windowH, "SAI2.0 - CS327a HW1 - SOLUTION", NULL, NULL);
 	glfwSetWindowPos(window, windowPosX, windowPosY);
 	glfwShowWindow(window);
     glfwMakeContextCurrent(window);

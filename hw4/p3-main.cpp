@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw4 - p3-main-sol.cpp
+ * hw4-p3-main.cpp
  *
  * Implement cooperative manipulation
  * by completing the "FILL ME IN" section 

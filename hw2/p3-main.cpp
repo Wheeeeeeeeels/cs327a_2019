@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw2 - p3-main.cpp
+ * hw2-p3-main.cpp
  *
  * Implement motion-force control for a 7-DOF redundant kuka 
  * by completing the "FILL ME IN" section 

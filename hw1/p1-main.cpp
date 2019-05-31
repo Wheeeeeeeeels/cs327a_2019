@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw1 - main.cpp
+ * hw1-main.cpp
  *
  * Implement an algorithm to have a 7-DOF kuka track a desired trajectory
  * by completing the "FILL ME IN" section 

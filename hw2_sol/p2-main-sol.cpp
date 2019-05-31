@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw2 - p1-main-sol.cpp
+ * hw2-p2-main-sol.cpp
  *
  * Implement operational space motion tracking for a 7-DOF redundant kuka 
  * by completing the "FILL ME IN" section 
@@ -347,7 +347,7 @@ GLFWwindow* glfwInitialize() {
 
     // create window and make it current
     glfwWindowHint(GLFW_VISIBLE, 0);
-    GLFWwindow* window = glfwCreateWindow(windowW, windowH, "SAI2.0 - CS327a HW2", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowW, windowH, "SAI2.0 - CS327a HW2 - SOLUTION", NULL, NULL);
 	glfwSetWindowPos(window, windowPosX, windowPosY);
 	glfwShowWindow(window);
     glfwMakeContextCurrent(window);

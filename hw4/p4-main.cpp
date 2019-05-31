@@ -1,8 +1,10 @@
 /*======================================================================================
- * hw4 - p4-main-sol.cpp
+ * hw4-p4-main.cpp
  *
- * Implement whole body hierarchical control
+ * Implement whole body hierarchical control 
  * by completing the "FILL ME IN" section 
+ *
+ * obstacle avoidance, trajectory tracking and posture tasks
  *
  * Elena Galbally, Spring 2019
  *

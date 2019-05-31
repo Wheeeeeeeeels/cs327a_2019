@@ -1,5 +1,5 @@
 /*======================================================================================
- * hw2 - p1-main.cpp
+ * hw2-p1-main.cpp
  *
  * Implement three variations of a position controller for a 6-DOF Puma 
  * by completing the "FILL ME IN" section 
