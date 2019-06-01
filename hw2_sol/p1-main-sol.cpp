@@ -65,9 +65,10 @@ void keySelect(GLFWwindow* window, int key, int scancode, int action, int mods);
    MAIN LOOP
 ========================================================================================== */
 int main (int argc, char** argv) {
+	
 	// get problem part
 	if (argc < 2) {
-		cout << "Usage: ./hw2-p2 <part: 1 or 2 or 3>" << endl;
+		cout << "Usage: ./hw2-p1-sol <part: 1 or 2 or 3>" << endl;
 		return 0;
 	}
 	selectProblemPart(argv[1]);
@@ -263,6 +264,7 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
    SIMULATION SETUP
    -----------------------
    * Simulation loop
+   * Select problem part
    * Window initialization
    * Window error
    * Mouse click commands
@@ -302,7 +304,7 @@ void selectProblemPart(char* input) {
 			enum_problem_part = PART3;
 			break;
 		default:
-			cout << "Usage: ./hw2-p2 <part: 1 or 2 or 3>" << endl;
+			cout << "Usage: ./hw2-p1-sol <part: 1 or 2 or 3>" << endl;
 			exit(0);
 	}
 }
